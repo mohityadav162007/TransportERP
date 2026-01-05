@@ -21,7 +21,7 @@ This is the most critical part. Click the **"Build & Development Settings"** dro
 
 *   **Framework Preset:** `Other`
 *   **Build Command:** `npm run build`
-*   **Output Directory:** `frontend/dist`
+*   **Output Directory:** `frontend/dist`  <-- (MAKE SURE THIS IS CORRECT)
 *   **Install Command:** (Leave **OVERRIDE** turned **OFF**)
 
 ---

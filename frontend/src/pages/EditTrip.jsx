@@ -61,6 +61,7 @@ export default function EditTrip() {
         himmali: Number(form.himmali) || 0,
 
         payment_status: form.payment_status,
+        gaadi_balance_status: form.gaadi_balance_status,
 
         weight: form.weight ? Number(form.weight) : null,
         remark: form.remark || null
@@ -124,8 +125,12 @@ export default function EditTrip() {
           <input type="number" name="tds" value={form.tds} onChange={change} placeholder="TDS" />
           <input type="number" name="himmali" value={form.himmali} onChange={change} placeholder="Himmali" />
           <select name="payment_status" value={form.payment_status} onChange={change}>
-            <option value="UNPAID">UNPAID</option>
-            <option value="PAID">PAID</option>
+            <option value="UNPAID">Party Balance: UNPAID</option>
+            <option value="PAID">Party Balance: PAID</option>
+          </select>
+          <select name="gaadi_balance_status" value={form.gaadi_balance_status || "UNPAID"} onChange={change}>
+            <option value="UNPAID">Gaadi Balance: UNPAID</option>
+            <option value="PAID">Gaadi Balance: PAID</option>
           </select>
         </Section>
 

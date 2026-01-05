@@ -21,6 +21,7 @@ CREATE TABLE trips (
   tds NUMERIC(12, 2) DEFAULT 0,
   himmali NUMERIC(12, 2) DEFAULT 0,
   payment_status VARCHAR(50) DEFAULT 'UNPAID',
+  gaadi_balance_status VARCHAR(50) DEFAULT 'UNPAID',
   profit NUMERIC(12, 2) DEFAULT 0,
   weight VARCHAR(50),
   remark TEXT,

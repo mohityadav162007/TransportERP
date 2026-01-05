@@ -9,6 +9,7 @@ import analyticsRouter from "./routes/analytics.js";
 import dashboardRouter from "./routes/dashboard.js";
 import reportsRouter from "./routes/reports.js";
 import authRouter from "./routes/auth.js";
+import paymentHistoryRouter from "./routes/paymentHistory.js";
 import authenticateToken from "./middleware/authMiddleware.js";
 
 const app = express();
@@ -24,6 +25,7 @@ app.use("/api/trips", authenticateToken, tripsRouter);
 app.use("/api/analytics", authenticateToken, analyticsRouter);
 app.use("/api/dashboard", authenticateToken, dashboardRouter);
 app.use("/api/reports", authenticateToken, reportsRouter);
+app.use("/api/payment-history", authenticateToken, paymentHistoryRouter);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK" });

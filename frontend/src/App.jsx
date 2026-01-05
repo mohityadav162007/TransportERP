@@ -10,6 +10,7 @@ import CreateTrip from "./pages/CreateTrip";
 import EditTrip from "./pages/EditTrip";
 import Analytics from "./pages/Analytics";
 import Reports from "./pages/Reports";
+import PaymentHistory from "./pages/PaymentHistory";
 
 import Login from "./pages/Login";
 import PrivateRoute from "./components/PrivateRoute";
@@ -88,6 +89,14 @@ export default function App() {
             <PrivateRoute>
               <Layout>
                 <Reports />
+              </Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/payment-history" element={
+            <PrivateRoute>
+              <Layout>
+                <PaymentHistory />
               </Layout>
             </PrivateRoute>
           } />

@@ -17,6 +17,9 @@ export default function Sidebar() {
         <Link to="/reports" className="block text-gray-700 hover:text-blue-600">
           Reports
         </Link>
+        <Link to="/payment-history" className="block text-gray-700 hover:text-blue-600">
+          Payment History
+        </Link>
       </nav>
     </aside>
   );

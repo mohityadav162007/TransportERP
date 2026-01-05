@@ -157,6 +157,18 @@ router.put("/:id", async (req, res) => {
   try {
     const t = req.body;
 
+    // First, get the old trip data to compare
+    const oldTripResult = await pool.query(
+      "SELECT * FROM trips WHERE id=$1 AND is_deleted=false",
+      [req.params.id]
+    );
+
+    if (oldTripResult.rows.length === 0) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    const oldTrip = oldTripResult.rows[0];
+
     const gaadi_freight = Number(t.gaadi_freight || 0);
     const gaadi_advance = Number(t.gaadi_advance || 0);
     const party_freight = Number(t.party_freight || 0);
@@ -190,11 +202,12 @@ router.put("/:id", async (req, res) => {
         tds=$17,
         himmali=$18,
         payment_status=$19,
-        profit=$20,
-        weight=$21,
-        remark=$22,
+        gaadi_balance_status=$20,
+        profit=$21,
+        weight=$22,
+        remark=$23,
         updated_at=now()
-      WHERE id=$23 AND is_deleted=false
+      WHERE id=$24 AND is_deleted=false
       RETURNING *
       `,
       [
@@ -217,12 +230,88 @@ router.put("/:id", async (req, res) => {
         tds,
         himmali,
         t.payment_status || "UNPAID",
+        t.gaadi_balance_status || "UNPAID",
         profit,
         t.weight || null,
         t.remark || null,
         req.params.id
       ]
     );
+
+    // Create payment history entries
+    const updatedTrip = result.rows[0];
+
+    // Check for Gaadi Advance payment (when filled for first time)
+    if (gaadi_advance > 0 && oldTrip.gaadi_advance === 0) {
+      await pool.query(
+        `INSERT INTO payment_history 
+         (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          updatedTrip.id,
+          updatedTrip.trip_code,
+          'DEBIT',
+          'Gaadi Advance Paid',
+          gaadi_advance,
+          updatedTrip.vehicle_number,
+          updatedTrip.loading_date
+        ]
+      );
+    }
+
+    // Check for Gaadi Balance status change
+    if (t.gaadi_balance_status === 'PAID' && oldTrip.gaadi_balance_status === 'UNPAID') {
+      await pool.query(
+        `INSERT INTO payment_history 
+         (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          updatedTrip.id,
+          updatedTrip.trip_code,
+          'DEBIT',
+          'Gaadi Balance Paid',
+          gaadi_balance,
+          updatedTrip.vehicle_number,
+          updatedTrip.loading_date
+        ]
+      );
+    }
+
+    // Check for Party Advance payment (when filled for first time)
+    if (party_advance > 0 && oldTrip.party_advance === 0) {
+      await pool.query(
+        `INSERT INTO payment_history 
+         (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          updatedTrip.id,
+          updatedTrip.trip_code,
+          'CREDIT',
+          'Party Advance Received',
+          party_advance,
+          updatedTrip.vehicle_number,
+          updatedTrip.loading_date
+        ]
+      );
+    }
+
+    // Check for Party Balance status change
+    if (t.payment_status === 'PAID' && oldTrip.payment_status === 'UNPAID') {
+      await pool.query(
+        `INSERT INTO payment_history 
+         (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          updatedTrip.id,
+          updatedTrip.trip_code,
+          'CREDIT',
+          'Party Balance Received',
+          party_balance,
+          updatedTrip.vehicle_number,
+          updatedTrip.loading_date
+        ]
+      );
+    }
 
     res.json(result.rows[0]);
   } catch (err) {

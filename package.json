@@ -1,0 +1,7 @@
+{
+    "name": "transport-erp-monorepo",
+    "private": true,
+    "scripts": {
+        "build": "npm run build --prefix frontend"
+    }
+}

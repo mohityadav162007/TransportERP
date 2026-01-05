@@ -28,7 +28,11 @@ export default function Analytics() {
         partyMap[t.party_name].trips += 1;
         partyMap[t.party_name].freight += Number(t.party_freight || 0);
         partyMap[t.party_name].advance += Number(t.party_advance || 0);
-        partyMap[t.party_name].balance += Number(t.party_balance || 0);
+
+        // If payment status is PAID, assume balance is cleared/0 for analytics
+        const pBalance = t.party_payment_status === 'PAID' ? 0 : Number(t.party_balance || 0);
+        partyMap[t.party_name].balance += pBalance;
+
         partyMap[t.party_name].profit += Number(t.profit || 0);
       });
 
@@ -51,7 +55,11 @@ export default function Analytics() {
         ownerMap[owner].trips += 1;
         ownerMap[owner].freight += Number(t.gaadi_freight || 0);
         ownerMap[owner].advance += Number(t.gaadi_advance || 0);
-        ownerMap[owner].balance += Number(t.gaadi_balance || 0);
+
+        // If gaadi balance status is PAID, assume balance is cleared/0 for analytics
+        const oBalance = t.gaadi_balance_status === 'PAID' ? 0 : Number(t.gaadi_balance || 0);
+        ownerMap[owner].balance += oBalance;
+
         ownerMap[owner].profit += Number(t.profit || 0);
       });
 
@@ -79,6 +87,7 @@ export default function Analytics() {
             "Freight",
             "Advance",
             "Outstanding",
+            "Status",
             "Profit"
           ]}
           rows={partyStats.map(p => [
@@ -88,6 +97,9 @@ export default function Analytics() {
             `₹${formatCurrency(p.advance)}`,
             <span className={p.balance > 0 ? "text-red-600 font-semibold" : "text-green-600 font-semibold"}>
               ₹{formatCurrency(p.balance)}
+            </span>,
+            <span className={`text-xs font-bold px-2 py-1 rounded ${p.balance > 0 ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}>
+              {p.balance > 0 ? "PENDING" : "SETTLED"}
             </span>,
             `₹${formatCurrency(p.profit)}`
           ])}
@@ -104,6 +116,7 @@ export default function Analytics() {
             "Freight",
             "Advance",
             "Balance",
+            "Status",
             "Profit"
           ]}
           rows={ownerStats.map(o => [
@@ -113,6 +126,9 @@ export default function Analytics() {
             `₹${formatCurrency(o.advance)}`,
             <span className={o.balance > 0 ? "text-red-600 font-semibold" : "text-green-600 font-semibold"}>
               ₹{formatCurrency(o.balance)}
+            </span>,
+            <span className={`text-xs font-bold px-2 py-1 rounded ${o.balance > 0 ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}>
+              {o.balance > 0 ? "PENDING" : "SETTLED"}
             </span>,
             `₹${formatCurrency(o.profit)}`
           ])}

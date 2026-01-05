@@ -116,7 +116,7 @@ router.post("/", async (req, res) => {
     console.error("CREATE TRIP ERROR:", err);
     res.status(500).json({
       message: "Failed to create trip",
-      error: err.message
+      error: err.hint || err.detail || err.message
     });
   }
 });

@@ -15,6 +15,10 @@ export default function EditTrip() {
     api.get("/trips").then(res => {
       const trip = res.data.find(t => t.id == id);
       if (!trip) return navigate("/trips");
+      // Normalize payment_status if it comes as party_payment_status
+      if (trip.party_payment_status && !trip.payment_status) {
+        trip.payment_status = trip.party_payment_status;
+      }
       setForm(trip);
     });
   }, [id, navigate]);

@@ -29,8 +29,9 @@ export default function Analytics() {
         partyMap[t.party_name].freight += Number(t.party_freight || 0);
         partyMap[t.party_name].advance += Number(t.party_advance || 0);
 
-        // If payment status is PAID, assume balance is cleared/0 for analytics
-        const pBalance = t.party_payment_status === 'PAID' ? 0 : Number(t.party_balance || 0);
+        // If payment status is PAID (check both possible field names), assume balance is cleared
+        const pStatus = t.party_payment_status || t.payment_status;
+        const pBalance = pStatus === 'PAID' ? 0 : Number(t.party_balance || 0);
         partyMap[t.party_name].balance += pBalance;
 
         partyMap[t.party_name].profit += Number(t.profit || 0);

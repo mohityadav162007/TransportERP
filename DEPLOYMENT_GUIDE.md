@@ -14,18 +14,18 @@ git push
 ---
 
 ## Step 2: Vercel Project Configuration
-Go to your **Vercel Dashboard**, select your project, and go to **Settings > General**.
+Go to your **Vercel Project Settings > General**.
 
-1.  **Framework Preset:** Select **Other** (or Vite if it detects it, but "Other" is safer for monorepos).
-2.  **Root Directory:** Leave as **`./`** (the root directory).
-3.  **Build Command:** `npm run build` (This will trigger the root `package.json` we just created).
-4.  **Output Directory:** `frontend/dist`.
-5.  **Install Command:** `npm install --prefix frontend && npm install --prefix backend`.
+1.  **Framework Preset:** Select **Other**.
+2.  **Root Directory:** Leave as **`./`** (the root of your project).
+3.  **Build Command:** `cd frontend && npm install && npm run build`
+4.  **Output Directory:** `frontend/dist`
+5.  **Install Command:** (Leave as default or blank)
 
 ---
 
 ## Step 3: Set Environment Variables
-Go to **Settings > Environment Variables** and add these four keys:
+Go to **Settings > Environment Variables** and add these:
 
 | Key | Value |
 | :--- | :--- |

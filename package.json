@@ -1,7 +1,11 @@
 {
     "name": "transport-erp-monorepo",
     "private": true,
+    "workspaces": [
+        "frontend",
+        "backend"
+    ],
     "scripts": {
-        "build": "npm run build --prefix frontend"
+        "build": "cd frontend && npm install && npm run build"
     }
 }

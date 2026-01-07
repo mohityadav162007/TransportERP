@@ -17,6 +17,7 @@ CREATE TABLE payment_history (
   
   -- Metadata
   transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_deleted BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

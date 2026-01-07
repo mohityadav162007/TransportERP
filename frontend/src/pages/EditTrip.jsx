@@ -106,21 +106,35 @@ export default function EditTrip() {
         <Section title="Vehicle & Driver">
           <input name="vehicle_number" value={form.vehicle_number} onChange={change} required placeholder="Vehicle Number" />
           <input name="driver_number" value={form.driver_number || ""} onChange={change} placeholder="Driver Number" />
-          <input name="motor_owner_name" value={form.motor_owner_name || ""} onChange={change} placeholder="Motor Owner Name" />
+          <input name="motor_owner_name" value={form.motor_owner_name || ""} onChange={change} onBlur={async () => {
+            if (!form.motor_owner_name) return;
+            try {
+              const res = await api.get(`/masters/motor-owners?name=${encodeURIComponent(form.motor_owner_name)}`);
+              const match = res.data.find(m => m.name.toLowerCase() === form.motor_owner_name.toLowerCase().trim());
+              if (match && match.mobile) setForm(prev => ({ ...prev, motor_owner_number: match.mobile }));
+            } catch (e) { }
+          }} placeholder="Motor Owner Name" />
           <input name="motor_owner_number" value={form.motor_owner_number || ""} onChange={change} placeholder="Motor Owner Number" />
         </Section>
 
         {/* Gaadi */}
         <Section title="Gaadi (Cost)">
-          <input type="number" name="gaadi_freight" value={form.gaadi_freight} onChange={change} required placeholder="Gaadi Freight" />
+          <input type="number" name="gaadi_freight" value={form.gaadi_freight} onChange={change} placeholder="Gaadi Freight" />
           <input type="number" name="gaadi_advance" value={form.gaadi_advance} onChange={change} placeholder="Gaadi Advance" />
         </Section>
 
         {/* Party */}
         <Section title="Party (Income)">
-          <input name="party_name" value={form.party_name} onChange={change} required placeholder="Party Name" />
+          <input name="party_name" value={form.party_name} onChange={change} onBlur={async () => {
+            if (!form.party_name) return;
+            try {
+              const res = await api.get(`/masters/parties?name=${encodeURIComponent(form.party_name)}`);
+              const match = res.data.find(p => p.name.toLowerCase() === form.party_name.toLowerCase().trim());
+              if (match && match.mobile) setForm(prev => ({ ...prev, party_number: match.mobile }));
+            } catch (e) { }
+          }} required placeholder="Party Name" />
           <input name="party_number" value={form.party_number || ""} onChange={change} placeholder="Party Number" />
-          <input type="number" name="party_freight" value={form.party_freight} onChange={change} required placeholder="Party Freight" />
+          <input type="number" name="party_freight" value={form.party_freight} onChange={change} placeholder="Party Freight" />
           <input type="number" name="party_advance" value={form.party_advance} onChange={change} placeholder="Party Advance" />
         </Section>
 

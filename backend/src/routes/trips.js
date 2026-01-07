@@ -37,6 +37,14 @@ router.post("/", async (req, res) => {
 
     const trip_code = await generateTripCode(t.loading_date);
 
+    // AUTO-MANAGE MASTERS
+    await ensureMasters(
+      t.party_name,
+      t.party_number,
+      t.motor_owner_name,
+      t.motor_owner_number
+    );
+
     const gaadi_freight = Number(t.gaadi_freight || 0);
     const gaadi_advance = Number(t.gaadi_advance || 0);
     const party_freight = Number(t.party_freight || 0);
@@ -156,6 +164,14 @@ router.get("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const t = req.body;
+
+    // AUTO-MANAGE MASTERS
+    await ensureMasters(
+      t.party_name,
+      t.party_number,
+      t.motor_owner_name,
+      t.motor_owner_number
+    );
 
     // First, get the old trip data to compare
     const oldTripResult = await pool.query(
@@ -331,6 +347,10 @@ router.delete("/:id", async (req, res) => {
   await pool.query(`UPDATE trips SET is_deleted=true WHERE id=$1`, [
     req.params.id
   ]);
+  // Sync soft delete with payment history
+  await pool.query(`UPDATE payment_history SET is_deleted=true WHERE trip_id=$1`, [
+    req.params.id
+  ]);
   res.json({ message: "Trip deleted" });
 });
 
@@ -339,6 +359,10 @@ router.post("/:id/restore", async (req, res) => {
     `UPDATE trips SET is_deleted=false, updated_at=now() WHERE id=$1`,
     [req.params.id]
   );
+  // Sync restore with payment history
+  await pool.query(`UPDATE payment_history SET is_deleted=false WHERE trip_id=$1`, [
+    req.params.id
+  ]);
   res.json({ message: "Trip restored" });
 });
 
@@ -390,3 +414,26 @@ router.get("/:id/pod/file", async (req, res) => {
 });
 
 export default router;
+
+/* ================================
+   HELPER: MANAGE MASTERS
+================================ */
+async function ensureMasters(pName, pMobile, mName, mMobile) {
+  try {
+    if (pName) {
+      await pool.query(
+        `INSERT INTO parties (name, mobile) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING`,
+        [pName, pMobile || null]
+      );
+    }
+    if (mName) {
+      await pool.query(
+        `INSERT INTO motor_owners (name, mobile) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING`,
+        [mName, mMobile || null]
+      );
+    }
+  } catch (err) {
+    console.error("Error auto-managing masters:", err.message);
+    // Do not fail the trip creation/update if master creation fails
+  }
+}

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { formatCurrency } from "../utils/format";
 
 export default function Analytics() {
+  const navigate = useNavigate();
   const [partyStats, setPartyStats] = useState([]);
   const [ownerStats, setOwnerStats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +93,12 @@ export default function Analytics() {
             "Profit"
           ]}
           rows={partyStats.map(p => [
-            p.party,
+            <span
+              className="text-blue-600 font-medium cursor-pointer hover:underline"
+              onClick={() => navigate(`/analytics/party/${encodeURIComponent(p.party)}`)}
+            >
+              {p.party}
+            </span>,
             p.trips,
             `₹${formatCurrency(p.freight)}`,
             `₹${formatCurrency(p.advance)}`,
@@ -121,7 +127,12 @@ export default function Analytics() {
             "Profit"
           ]}
           rows={ownerStats.map(o => [
-            o.owner,
+            <span
+              className="text-blue-600 font-medium cursor-pointer hover:underline"
+              onClick={() => navigate(`/analytics/owner/${encodeURIComponent(o.owner)}`)}
+            >
+              {o.owner}
+            </span>,
             o.trips,
             `₹${formatCurrency(o.freight)}`,
             `₹${formatCurrency(o.advance)}`,

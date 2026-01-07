@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 86QUEluBUcfcLuJhTkZEj505MJDse292tZtGViJAlL6x9WrxvGB7RjDgOgGZebh
+\restrict 365LsKyMwSvCaTV2HWRGnRGBZdexRi8Puzbh2RWt5D5HplSBJeb0Z1uCPcHtIB1
 
 -- Dumped from database version 18.1
 -- Dumped by pg_dump version 18.1
@@ -144,5 +144,5 @@ CREATE INDEX idx_trips_vehicle ON public.trips USING btree (vehicle_number);
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 86QUEluBUcfcLuJhTkZEj505MJDse292tZtGViJAlL6x9WrxvGB7RjDgOgGZebh
+\unrestrict 365LsKyMwSvCaTV2HWRGnRGBZdexRi8Puzbh2RWt5D5HplSBJeb0Z1uCPcHtIB1
 

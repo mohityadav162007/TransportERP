@@ -32,8 +32,37 @@ export default function CreateTrip() {
     weight: "",
     remark: "",
 
+    // Default Status (Hidden from UI)
     party_payment_status: "UNPAID"
   });
+
+  /* AUTO-FILL LOGIC */
+  const handlePartyBlur = async () => {
+    if (!form.party_name) return;
+    try {
+      const res = await api.get(`/masters/parties?name=${encodeURIComponent(form.party_name)}`);
+      // Find exact match (case insensitive)
+      const match = res.data.find(p => p.name.toLowerCase() === form.party_name.toLowerCase().trim());
+      if (match && match.mobile) {
+        setForm(prev => ({ ...prev, party_phone: match.mobile }));
+      }
+    } catch (err) {
+      console.error("Auto-fill party error:", err);
+    }
+  };
+
+  const handleOwnerBlur = async () => {
+    if (!form.motor_owner_name) return;
+    try {
+      const res = await api.get(`/masters/motor-owners?name=${encodeURIComponent(form.motor_owner_name)}`);
+      const match = res.data.find(m => m.name.toLowerCase() === form.motor_owner_name.toLowerCase().trim());
+      if (match && match.mobile) {
+        setForm(prev => ({ ...prev, motor_owner_number: match.mobile }));
+      }
+    } catch (err) {
+      console.error("Auto-fill owner error:", err);
+    }
+  };
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -156,6 +185,7 @@ export default function CreateTrip() {
               placeholder="Motor Owner Name"
               className="input"
               onChange={handleChange}
+              onBlur={handleOwnerBlur}
             />
             <input
               name="motor_owner_number"
@@ -174,7 +204,6 @@ export default function CreateTrip() {
               type="number"
               name="gaadi_freight"
               placeholder="Gaadi Freight"
-              required
               className="input"
               onChange={handleChange}
             />
@@ -198,6 +227,7 @@ export default function CreateTrip() {
               required
               className="input"
               onChange={handleChange}
+              onBlur={handlePartyBlur}
             />
             <input
               name="party_phone"
@@ -211,7 +241,6 @@ export default function CreateTrip() {
               type="number"
               name="party_freight"
               placeholder="Party Freight"
-              required
               className="input"
               onChange={handleChange}
             />
@@ -232,10 +261,13 @@ export default function CreateTrip() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="number"
+              step="0.1"
               name="weight"
-              placeholder="Weight (optional)"
+              placeholder="Weight (optional, e.g. 12.5)"
               className="input"
               onChange={handleChange}
+            // Enforce 1 decimal place on blur or change if strictly needed, 
+            // but step="0.1" handles validation.
             />
 
             <textarea
@@ -269,18 +301,7 @@ export default function CreateTrip() {
           </div>
         </section>
 
-        {/* Status */}
-        <section>
-          <h2 className="font-semibold mb-3">Status</h2>
-          <select
-            name="party_payment_status"
-            className="input"
-            onChange={handleChange}
-          >
-            <option value="UNPAID">UNPAID</option>
-            <option value="PAID">PAID</option>
-          </select>
-        </section>
+
 
         {/* Actions */}
         <div className="flex gap-4">

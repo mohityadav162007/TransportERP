@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 export default function Header() {
   const [status, setStatus] = useState("CHECKING");
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const checkHealth = () => {
@@ -21,8 +24,18 @@ export default function Header() {
 
   return (
     <header className="flex items-center justify-between bg-white border-b px-6 py-3">
-      <div className="font-semibold text-lg">
-        Transport ERP
+      <div className="flex items-center gap-4">
+        {location.pathname !== "/" && (
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 text-gray-600 hover:text-blue-600 px-3 py-1 border rounded hover:bg-gray-50 text-sm font-medium transition-colors"
+          >
+            ← Back
+          </button>
+        )}
+        <div className="font-semibold text-lg">
+          Transport ERP
+        </div>
       </div>
 
       <div className="flex items-center gap-4 text-sm">

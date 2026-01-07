@@ -20,6 +20,9 @@ export default function Sidebar() {
         <Link to="/payment-history" className="block text-gray-700 hover:text-blue-600">
           Payment History
         </Link>
+        <Link to="/expenses" className="block text-gray-700 hover:text-blue-600">
+          Daily Expenses
+        </Link>
       </nav>
     </aside>
   );

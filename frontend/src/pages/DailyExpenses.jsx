@@ -33,7 +33,7 @@ export default function DailyExpenses() {
         e.preventDefault();
         try {
             if (editingId) {
-                await api.put(`/expenses/${EditingId}`, form);
+                await api.put(`/expenses/${editingId}`, form);
             } else {
                 await api.post("/expenses", form);
             }
@@ -95,7 +95,7 @@ export default function DailyExpenses() {
                     </div>
                     <div>
                         <label className="block text-xs text-gray-500 mb-1">Amount</label>
-                        <input type="number" name="amount" required placeholder="0.00" value={form.amount} onChange={handleChange} className="input w-full" />
+                        <input type="number" step="0.01" name="amount" required placeholder="0.00" value={form.amount} onChange={handleChange} className="input w-full" />
                     </div>
                     <div>
                         <label className="block text-xs text-gray-500 mb-1">Vehicle (Opt)</label>

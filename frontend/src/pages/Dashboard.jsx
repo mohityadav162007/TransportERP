@@ -10,6 +10,8 @@ import {
   TrendingUp
 } from "lucide-react";
 
+import GlassBox from "../components/GlassBox";
+
 import {
   groupByDate,
   statusSplit,
@@ -81,157 +83,174 @@ export default function Dashboard() {
       {/* ===== ROW 3: PROFIT GRAPH + STATUS CHARTS ===== */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         {/* Profit Trend (Spans 2 cols) */}
-        <div className="xl:col-span-2 bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800">Profit Graph</h3>
-          </div>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={profitTrend}>
-                <defs>
-                  <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#9ca3af', fontSize: 12 }}
-                  dy={10}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#9ca3af', fontSize: 12 }}
-                />
-                <Tooltip />
-                <Area
-                  type="monotone"
-                  dataKey="profit"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorProfit)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="xl:col-span-2 h-full">
+          <GlassBox>
+            <div className="h-full flex flex-col">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800">Profit Graph</h3>
+              </div>
+              <div className="h-64 w-full flex-grow">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={profitTrend}>
+                    <defs>
+                      <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9ca3af', fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9ca3af', fontSize: 12 }}
+                    />
+                    <Tooltip />
+                    <Area
+                      type="monotone"
+                      dataKey="profit"
+                      stroke="#22c55e"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorProfit)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </GlassBox>
         </div>
 
         {/* POD Status */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100 flex flex-col items-center">
-          <h3 className="text-sm font-semibold text-gray-600 self-start mb-4">POD Status</h3>
-          <div className="h-48 w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={podData}
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={0}
-                  dataKey="value"
-                  startAngle={90}
-                  endAngle={-270}
-                >
-                  <Cell fill="#14b8a6" /> {/* Teal for Uploaded */}
-                  <Cell fill="#f43f5e" /> {/* Red for Pending */}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            {/* Center Label (Optional) */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="h-24 w-24 rounded-full border-4 border-gray-50"></div>
-            </div>
-          </div>
-          <div className="w-full mt-4 space-y-2">
-            <div className="flex justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-                <span className="text-gray-600">Uploaded</span>
+        <div className="h-full">
+          <GlassBox>
+            <div className="h-full flex flex-col items-center">
+              <h3 className="text-sm font-semibold text-gray-600 self-start mb-4">POD Status</h3>
+              <div className="h-48 w-full relative flex-grow">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={podData}
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={0}
+                      dataKey="value"
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      <Cell fill="#14b8a6" /> {/* Teal for Uploaded */}
+                      <Cell fill="#f43f5e" /> {/* Red for Pending */}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Center Label (Optional) */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="h-24 w-24 rounded-full border-4 border-gray-50"></div>
+                </div>
               </div>
-              <span className="font-bold text-gray-800">{podData[0].value}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span className="text-gray-600">Pending</span>
+              <div className="w-full mt-4 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                    <span className="text-gray-600">Uploaded</span>
+                  </div>
+                  <span className="font-bold text-gray-800">{podData[0].value}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span className="text-gray-600">Pending</span>
+                  </div>
+                  <span className="font-bold text-gray-800">{podData[1].value}</span>
+                </div>
               </div>
-              <span className="font-bold text-gray-800">{podData[1].value}</span>
             </div>
-          </div>
+          </GlassBox>
         </div>
 
         {/* Payment Status */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100 flex flex-col items-center">
-          <h3 className="text-sm font-semibold text-gray-600 self-start mb-4">Payment Status</h3>
-          <div className="h-48 w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={paymentData}
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={0}
-                  dataKey="value"
-                  startAngle={90}
-                  endAngle={-270}
-                >
-                  <Cell fill="#14b8a6" /> {/* Teal for Received */}
-                  <Cell fill="#f43f5e" /> {/* Red for Pending */}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="h-24 w-24 rounded-full border-4 border-gray-50"></div>
-            </div>
-          </div>
-          <div className="w-full mt-4 space-y-2">
-            <div className="flex justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-                <span className="text-gray-600">Received</span>
+        <div className="h-full">
+          <GlassBox>
+            <div className="h-full flex flex-col items-center">
+              <h3 className="text-sm font-semibold text-gray-600 self-start mb-4">Payment Status</h3>
+              <div className="h-48 w-full relative flex-grow">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={paymentData}
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={0}
+                      dataKey="value"
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      <Cell fill="#14b8a6" /> {/* Teal for Received */}
+                      <Cell fill="#f43f5e" /> {/* Red for Pending */}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="h-24 w-24 rounded-full border-4 border-gray-50"></div>
+                </div>
               </div>
-              <span className="font-bold text-gray-800">{paymentData[0].value}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span className="text-gray-600">Pending</span>
+              <div className="w-full mt-4 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                    <span className="text-gray-600">Received</span>
+                  </div>
+                  <span className="font-bold text-gray-800">{paymentData[0].value}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span className="text-gray-600">Pending</span>
+                  </div>
+                  <span className="font-bold text-gray-800">{paymentData[1].value}</span>
+                </div>
               </div>
-              <span className="font-bold text-gray-800">{paymentData[1].value}</span>
             </div>
-          </div>
+          </GlassBox>
         </div>
       </div>
 
       {/* ===== ROW 4: WEEKLY TRIPS + PENDING POD TABLE ===== */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Weekly Trips (1 col) */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-800 mb-6">Weekly Trips</h3>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyTrips}>
-                <XAxis
-                  dataKey="day"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#9ca3af', fontSize: 12 }}
-                  dy={10}
-                />
-                <Tooltip cursor={{ fill: 'transparent' }} />
-                <Bar dataKey="count" fill="#14b8a6" radius={[4, 4, 0, 0]} barSize={30} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="h-full">
+          <GlassBox>
+            <div className="h-full flex flex-col">
+              <h3 className="text-sm font-semibold text-gray-800 mb-6">Weekly Trips</h3>
+              <div className="h-64 w-full flex-grow">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyTrips}>
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9ca3af', fontSize: 12 }}
+                      dy={10}
+                    />
+                    <Tooltip cursor={{ fill: 'transparent' }} />
+                    <Bar dataKey="count" fill="#14b8a6" radius={[4, 4, 0, 0]} barSize={30} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </GlassBox>
         </div>
 
         {/* POD Pending Table (2 cols) */}
+        {/* Do NOT apply GlassBox to Tables */}
         <div className="xl:col-span-2 bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-4 border-b">
             <h3 className="text-sm font-semibold text-gray-800">POD Pending</h3>
@@ -247,6 +266,7 @@ export default function Dashboard() {
 
       {/* ===== ROW 5: PENDING PAYMENTS + RECENT TRIPS ===== */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Do NOT apply GlassBox to Tables */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden min-h-[300px]">
           <div className="p-4 border-b">
             <h3 className="text-sm font-semibold text-gray-800">Pending Payments</h3>
@@ -278,20 +298,24 @@ export default function Dashboard() {
 
 function KPICard({ title, value, icon: Icon, disableFormat }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100 flex justify-between items-start">
-      <div>
-        <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-        <h3 className="text-3xl font-bold text-gray-800 tracking-tight">
-          {value}
-        </h3>
-        <div className="flex items-center gap-1 mt-2 text-xs font-medium text-green-600">
-          <TrendingUp size={14} />
-          <span>5.39%</span> {/* Static trend for now as per design */}
+    <div className="h-full">
+      <GlassBox>
+        <div className="flex justify-between items-start h-full">
+          <div>
+            <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+            <h3 className="text-3xl font-bold text-gray-800 tracking-tight">
+              {value}
+            </h3>
+            <div className="flex items-center gap-1 mt-2 text-xs font-medium text-green-600">
+              <TrendingUp size={14} />
+              <span>5.39%</span> {/* Static trend for now as per design */}
+            </div>
+          </div>
+          <div className="p-3 bg-gray-50 rounded-lg text-gray-600">
+            <Icon size={24} strokeWidth={1.5} />
+          </div>
         </div>
-      </div>
-      <div className="p-3 bg-gray-50 rounded-lg text-gray-600">
-        <Icon size={24} strokeWidth={1.5} />
-      </div>
+      </GlassBox>
     </div>
   );
 }

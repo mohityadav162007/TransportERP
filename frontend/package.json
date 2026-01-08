@@ -9,11 +9,11 @@
     "lint": "eslint .",
     "server-start": "cd ../backend && npm run dev",
     "dev": "concurrently \"npm run server-start\" \"npm run start\""
-    
   },
   "dependencies": {
     "axios": "^1.13.2",
     "concurrently": "^7.5.0",
+    "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.11.0",

@@ -16,13 +16,33 @@ export function groupByDate(trips) {
     }));
 }
 
-export function statusSplit(trips, key, uploadedValue) {
-  const uploaded = trips.filter(t => t[key] === uploadedValue).length;
-  const pending = trips.length - uploaded;
+export function getWeeklyTrips(trips) {
+  const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  // Initialize with 0
+  const counts = { "Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0, "Sun": 0 };
+
+  trips.forEach(t => {
+    const d = new Date(t.loading_date);
+    const day = dayMap[d.getDay()];
+    if (counts[day] !== undefined) {
+      counts[day]++;
+    }
+  });
+
+  // Return in specific order Mon -> Sun
+  return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => ({
+    day,
+    count: counts[day]
+  }));
+}
+
+export function statusSplit(trips, key, successValue, labels = ["Completed", "Pending"]) {
+  const success = trips.filter(t => t[key] === successValue).length;
+  const pending = trips.length - success;
 
   return [
-    { name: "Uploaded", value: uploaded },
-    { name: "Pending", value: pending }
+    { name: labels[0], value: success },
+    { name: labels[1], value: pending }
   ];
 }
 

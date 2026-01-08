@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import TripDetail from "./pages/TripDetail";
 
-import Sidebar from "./layout/Sidebar";
+
 import Header from "./layout/Header";
 
 import Dashboard from "./pages/Dashboard";
@@ -21,14 +21,11 @@ import { AuthProvider } from "./context/AuthContext";
 
 function Layout({ children }) {
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 p-6 overflow-y-auto">
-          {children}
-        </main>
-      </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+      <Header />
+      <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        {children}
+      </main>
     </div>
   );
 }

@@ -310,10 +310,7 @@ function KPICard({ title, value, icon: Icon, disableFormat }) {
             <h3 className="text-3xl font-bold text-white tracking-tight">
               {value}
             </h3>
-            <div className="flex items-center gap-1 mt-2 text-xs font-medium text-green-400">
-              <TrendingUp size={14} />
-              <span>5.39%</span>
-            </div>
+
           </div>
           <div className="p-3 bg-white/10 rounded-lg text-gray-200">
             <Icon size={24} strokeWidth={1.5} />

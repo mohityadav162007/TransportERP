@@ -119,7 +119,44 @@ router.post("/", async (req, res) => {
       ]
     );
 
-    res.status(201).json(result.rows[0]);
+    const createdTrip = result.rows[0];
+
+    // Create payment history entries for advances if present
+    if (gaadi_advance > 0) {
+      await pool.query(
+        `INSERT INTO payment_history 
+         (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          createdTrip.id,
+          createdTrip.trip_code,
+          'DEBIT',
+          'Gaadi Advance Paid',
+          gaadi_advance,
+          createdTrip.vehicle_number,
+          createdTrip.loading_date
+        ]
+      );
+    }
+
+    if (party_advance > 0) {
+      await pool.query(
+        `INSERT INTO payment_history 
+         (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          createdTrip.id,
+          createdTrip.trip_code,
+          'CREDIT',
+          'Party Advance Received',
+          party_advance,
+          createdTrip.vehicle_number,
+          createdTrip.loading_date
+        ]
+      );
+    }
+
+    res.status(201).json(createdTrip);
   } catch (err) {
     console.error("CREATE TRIP ERROR:", err);
     res.status(500).json({
@@ -257,76 +294,88 @@ router.put("/:id", async (req, res) => {
     // Create payment history entries
     const updatedTrip = result.rows[0];
 
-    // Check for Gaadi Advance payment (when filled for first time)
-    if (gaadi_advance > 0 && oldTrip.gaadi_advance === 0) {
-      await pool.query(
-        `INSERT INTO payment_history 
-         (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          updatedTrip.id,
-          updatedTrip.trip_code,
-          'DEBIT',
-          'Gaadi Advance Paid',
-          gaadi_advance,
-          updatedTrip.vehicle_number,
-          updatedTrip.loading_date
-        ]
+    // --- GAADI ADVANCE ---
+    if (gaadi_advance > 0) {
+      const existing = await pool.query(
+        "SELECT id FROM payment_history WHERE trip_id=$1 AND payment_type='Gaadi Advance Paid' AND is_deleted=false",
+        [updatedTrip.id]
       );
+      if (existing.rows.length > 0) {
+        await pool.query(
+          "UPDATE payment_history SET amount=$1, loading_date=$2, vehicle_number=$3, trip_code=$4 WHERE id=$5",
+          [gaadi_advance, updatedTrip.loading_date, updatedTrip.vehicle_number, updatedTrip.trip_code, existing.rows[0].id]
+        );
+      } else {
+        await pool.query(
+          "INSERT INTO payment_history (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+          [updatedTrip.id, updatedTrip.trip_code, 'DEBIT', 'Gaadi Advance Paid', gaadi_advance, updatedTrip.vehicle_number, updatedTrip.loading_date]
+        );
+      }
+    } else {
+      await pool.query("UPDATE payment_history SET is_deleted=true WHERE trip_id=$1 AND payment_type='Gaadi Advance Paid'", [updatedTrip.id]);
     }
 
-    // Check for Gaadi Balance status change
-    if (t.gaadi_balance_status === 'PAID' && oldTrip.gaadi_balance_status === 'UNPAID') {
-      await pool.query(
-        `INSERT INTO payment_history 
-         (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          updatedTrip.id,
-          updatedTrip.trip_code,
-          'DEBIT',
-          'Gaadi Balance Paid',
-          gaadi_balance,
-          updatedTrip.vehicle_number,
-          updatedTrip.loading_date
-        ]
+    // --- GAADI BALANCE ---
+    if (t.gaadi_balance_status === 'PAID') {
+      const existing = await pool.query(
+        "SELECT id FROM payment_history WHERE trip_id=$1 AND payment_type='Gaadi Balance Paid' AND is_deleted=false",
+        [updatedTrip.id]
       );
+      if (existing.rows.length > 0) {
+        await pool.query(
+          "UPDATE payment_history SET amount=$1, loading_date=$2, vehicle_number=$3, trip_code=$4 WHERE id=$5",
+          [gaadi_balance, updatedTrip.loading_date, updatedTrip.vehicle_number, updatedTrip.trip_code, existing.rows[0].id]
+        );
+      } else {
+        await pool.query(
+          "INSERT INTO payment_history (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+          [updatedTrip.id, updatedTrip.trip_code, 'DEBIT', 'Gaadi Balance Paid', gaadi_balance, updatedTrip.vehicle_number, updatedTrip.loading_date]
+        );
+      }
+    } else {
+      await pool.query("UPDATE payment_history SET is_deleted=true WHERE trip_id=$1 AND payment_type='Gaadi Balance Paid'", [updatedTrip.id]);
     }
 
-    // Check for Party Advance payment (when filled for first time)
-    if (party_advance > 0 && oldTrip.party_advance === 0) {
-      await pool.query(
-        `INSERT INTO payment_history 
-         (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          updatedTrip.id,
-          updatedTrip.trip_code,
-          'CREDIT',
-          'Party Advance Received',
-          party_advance,
-          updatedTrip.vehicle_number,
-          updatedTrip.loading_date
-        ]
+    // --- PARTY ADVANCE ---
+    if (party_advance > 0) {
+      const existing = await pool.query(
+        "SELECT id FROM payment_history WHERE trip_id=$1 AND payment_type='Party Advance Received' AND is_deleted=false",
+        [updatedTrip.id]
       );
+      if (existing.rows.length > 0) {
+        await pool.query(
+          "UPDATE payment_history SET amount=$1, loading_date=$2, vehicle_number=$3, trip_code=$4 WHERE id=$5",
+          [party_advance, updatedTrip.loading_date, updatedTrip.vehicle_number, updatedTrip.trip_code, existing.rows[0].id]
+        );
+      } else {
+        await pool.query(
+          "INSERT INTO payment_history (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+          [updatedTrip.id, updatedTrip.trip_code, 'CREDIT', 'Party Advance Received', party_advance, updatedTrip.vehicle_number, updatedTrip.loading_date]
+        );
+      }
+    } else {
+      await pool.query("UPDATE payment_history SET is_deleted=true WHERE trip_id=$1 AND payment_type='Party Advance Received'", [updatedTrip.id]);
     }
 
-    // Check for Party Balance status change
-    if (t.payment_status === 'PAID' && oldTrip.payment_status === 'UNPAID') {
-      await pool.query(
-        `INSERT INTO payment_history 
-         (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          updatedTrip.id,
-          updatedTrip.trip_code,
-          'CREDIT',
-          'Party Balance Received',
-          party_balance,
-          updatedTrip.vehicle_number,
-          updatedTrip.loading_date
-        ]
+    // --- PARTY BALANCE ---
+    if (t.payment_status === 'PAID') {
+      const existing = await pool.query(
+        "SELECT id FROM payment_history WHERE trip_id=$1 AND payment_type='Party Balance Received' AND is_deleted=false",
+        [updatedTrip.id]
       );
+      if (existing.rows.length > 0) {
+        await pool.query(
+          "UPDATE payment_history SET amount=$1, loading_date=$2, vehicle_number=$3, trip_code=$4 WHERE id=$5",
+          [party_balance, updatedTrip.loading_date, updatedTrip.vehicle_number, updatedTrip.trip_code, existing.rows[0].id]
+        );
+      } else {
+        await pool.query(
+          "INSERT INTO payment_history (trip_id, trip_code, transaction_type, payment_type, amount, vehicle_number, loading_date) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+          [updatedTrip.id, updatedTrip.trip_code, 'CREDIT', 'Party Balance Received', party_balance, updatedTrip.vehicle_number, updatedTrip.loading_date]
+        );
+      }
+    } else {
+      await pool.query("UPDATE payment_history SET is_deleted=true WHERE trip_id=$1 AND payment_type='Party Balance Received'", [updatedTrip.id]);
     }
 
     res.json(result.rows[0]);

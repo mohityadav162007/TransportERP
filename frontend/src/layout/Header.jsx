@@ -48,6 +48,7 @@ export default function Header() {
                 <span className="text-xl">←</span>
               </button>
             )}
+            <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
             <div className="font-bold text-xl text-white tracking-tight">
               Transport ERP
             </div>

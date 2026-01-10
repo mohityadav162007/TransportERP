@@ -33,8 +33,13 @@ app.use("/api/payment-history", authenticateToken, paymentHistoryRouter);
 app.use("/api/masters", authenticateToken, mastersRouter);
 app.use("/api/expenses", authenticateToken, expensesRouter);
 
-app.get("/api/health", (req, res) => {
-  res.json({ status: "OK" });
+app.get("/api/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.json({ status: "OK", database: "connected" });
+  } catch (err) {
+    res.status(500).json({ status: "ERROR", database: "disconnected", error: err.message });
+  }
 });
 
 const PORT = process.env.PORT || 5000;

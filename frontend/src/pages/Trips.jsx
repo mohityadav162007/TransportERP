@@ -48,10 +48,11 @@ export default function Trips() {
     }
 
     if (filters.podStatus !== "ALL") {
-      if (filters.podStatus === "UPLOADED" && t.pod_status !== "UPLOADED") {
+      const isReceived = t.pod_status === "UPLOADED" || t.pod_status === "RECEIVED";
+      if (filters.podStatus === "UPLOADED" && !isReceived) {
         return false;
       }
-      if (filters.podStatus === "PENDING" && t.pod_status === "UPLOADED") {
+      if (filters.podStatus === "PENDING" && isReceived) {
         return false;
       }
     }
@@ -72,14 +73,44 @@ export default function Trips() {
     return b.id - a.id;
   });
 
-  const uploadPOD = async (id, file) => {
+  const uploadPOD = async (trip, file) => {
     if (!file) return;
-    const fd = new FormData();
-    fd.append("pod", file);
-    setUploadingId(id);
-    await api.post(`/trips/${id}/pod`, fd);
-    setUploadingId(null);
-    fetchTrips();
+
+    const CLOUDINARY_CLOUD_NAME = "dsreanaqu";
+    const CLOUDINARY_UPLOAD_PRESET = "pod_upload_unsigned";
+
+    setUploadingId(trip.id);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      formData.append("folder", `pod/${trip.trip_code}/`);
+
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.secure_url) {
+        // Send the secure URL to the backend
+        await api.post(`/trips/${trip.id}/pod`, { url: data.secure_url });
+        fetchTrips();
+      } else {
+        console.error("Cloudinary Upload Error:", data);
+        alert("Upload failed: " + (data.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("UPLOAD ERROR:", err);
+      alert("Failed to upload POD");
+    } finally {
+      setUploadingId(null);
+    }
   };
 
   const softDelete = async (e, id) => {
@@ -161,7 +192,7 @@ export default function Trips() {
           onChange={e => setFilters({ ...filters, podStatus: e.target.value })}
         >
           <option value="ALL">All PODs</option>
-          <option value="UPLOADED">Uploaded</option>
+          <option value="UPLOADED">Received/Uploaded</option>
           <option value="PENDING">Pending</option>
         </select>
         <input className="bg-white/10 border border-white/10 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -188,7 +219,7 @@ export default function Trips() {
               >
                 <div className="flex justify-between mb-4">
                   <div className="font-semibold text-white">{trip.trip_code}</div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${trip.pod_status === 'UPLOADED' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${(trip.pod_status === 'UPLOADED' || trip.pod_status === 'RECEIVED') ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>
                     POD: {trip.pod_status}
                   </span>
                 </div>
@@ -207,14 +238,14 @@ export default function Trips() {
                   </div>
 
                   <div className="flex gap-4 text-xs font-medium">
-                    {!trip.is_deleted && trip.pod_status !== "UPLOADED" && (
+                    {!trip.is_deleted && (
                       <label
                         className="text-blue-400 cursor-pointer hover:underline"
                         onClick={e => e.stopPropagation()}
                       >
-                        {uploadingId === trip.id ? "Uploading..." : "Upload POD"}
+                        {uploadingId === trip.id ? "Uploading..." : "Add POD"}
                         <input type="file" hidden
-                          onChange={e => uploadPOD(trip.id, e.target.files[0])}
+                          onChange={e => uploadPOD(trip, e.target.files[0])}
                         />
                       </label>
                     )}

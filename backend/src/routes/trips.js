@@ -9,16 +9,74 @@ import { supabase } from "../utils/supabaseClient.js";
 const router = express.Router();
 
 /* ================================
-   POD STORAGE
+   POD UPLOAD (CLOUDINARY)
 ================================ */
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-const BUCKET_NAME = process.env.SUPABASE_STORAGE_BUCKET || 'PODs';
+router.post("/:id/pod", async (req, res) => {
+  const { url } = req.body;
 
-/* ================================
-   CREATE TRIP  ✅ FIXED
-================================ */
+  if (!url) {
+    return res.status(400).json({ message: "No Cloudinary URL provided" });
+  }
+
+  try {
+    // Get existing pod_path
+    const tripResult = await pool.query(
+      "SELECT pod_path FROM trips WHERE id=$1",
+      [req.params.id]
+    );
+
+    if (tripResult.rows.length === 0) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    let currentPods = [];
+    const rawPath = tripResult.rows[0].pod_path;
+
+    if (rawPath) {
+      try {
+        currentPods = JSON.parse(rawPath);
+        if (!Array.isArray(currentPods)) {
+          currentPods = [rawPath]; // Fallback if it was a single string before
+        }
+      } catch (e) {
+        currentPods = [rawPath]; // Fallback for legacy data
+      }
+    }
+
+    // Append new URL if not already present
+    if (!currentPods.includes(url)) {
+      currentPods.push(url);
+    }
+
+    const newPodPath = JSON.stringify(currentPods);
+
+    // Limit check (VARCHAR(500))
+    if (newPodPath.length > 500) {
+      return res.status(400).json({
+        message: "Too many PODs. Database limit reached (500 chars).",
+        currentCount: currentPods.length
+      });
+    }
+
+    const result = await pool.query(
+      `
+      UPDATE trips SET
+        pod_status='RECEIVED',
+        pod_path=$1,
+        updated_at=now()
+      WHERE id=$2
+      RETURNING *
+      `,
+      [newPodPath, req.params.id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("POD UPDATE ERROR:", err);
+    res.status(500).json({ message: "Internal server error during POD update" });
+  }
+});
 
 router.post("/", async (req, res) => {
   try {
@@ -405,53 +463,7 @@ router.post("/:id/restore", async (req, res) => {
 });
 
 /* ================================
-   POD UPLOAD
-================================ */
-
-router.post("/:id/pod", upload.single("pod"), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "No POD uploaded" });
-  }
-
-  try {
-    const ext = path.extname(req.file.originalname) || ".jpg";
-    const fileName = `pod_${req.params.id}_${Date.now()}${ext}`;
-
-    const { data, error } = await supabase.storage
-      .from(BUCKET_NAME)
-      .upload(fileName, req.file.buffer, {
-        contentType: req.file.mimetype,
-        upsert: true
-      });
-
-    if (error) {
-      console.error("Supabase Storage Error:", error);
-      return res.status(500).json({ message: "Failed to upload to Supabase Storage", error: error.message });
-    }
-
-    const podPath = fileName;
-
-    const result = await pool.query(
-      `
-      UPDATE trips SET
-        pod_status='UPLOADED',
-        pod_path=$1,
-        updated_at=now()
-      WHERE id=$2
-      RETURNING *
-      `,
-      [podPath, req.params.id]
-    );
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("POD UPLOAD ERROR:", err);
-    res.status(500).json({ message: "Internal server error during POD upload" });
-  }
-});
-
-/* ================================
-   SERVE POD
+   SERVE POD (LATEST)
 ================================ */
 
 router.get("/:id/pod/file", async (req, res) => {
@@ -465,20 +477,21 @@ router.get("/:id/pod/file", async (req, res) => {
       return res.status(404).send("POD not found");
     }
 
-    const fileName = result.rows[0].pod_path;
-
-    const { data, error } = await supabase.storage
-      .from(BUCKET_NAME)
-      .createSignedUrl(fileName, 3600); // 1 hour expiry
-
-    if (error) {
-      console.error("Supabase Signed URL Error:", error);
-      return res.status(500).send("Failed to retrieve POD from storage");
+    let pods = [];
+    try {
+      pods = JSON.parse(result.rows[0].pod_path);
+    } catch (e) {
+      pods = [result.rows[0].pod_path];
     }
 
-    res.redirect(data.signedUrl);
+    if (!Array.isArray(pods) || pods.length === 0) {
+      return res.status(404).send("No POD URLs found");
+    }
+
+    // Redirect to the first/latest POD for legacy compatibility
+    res.redirect(pods[pods.length - 1]);
   } catch (err) {
-    console.error("POD DOWNLOAD ERROR:", err);
+    console.error("POD REDIRECT ERROR:", err);
     res.status(500).send("Failed to open POD");
   }
 });

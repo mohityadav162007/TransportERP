@@ -102,23 +102,90 @@ export default function TripDetail() {
           </div>
         </Section>
 
-        <Section title="POD Document">
-          {trip.pod_status === "UPLOADED" ? (
-            <button
-              onClick={openPOD}
-              className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 shadow-lg shadow-teal-500/20 transition-all font-medium flex items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-              View Document
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 text-rose-400 text-sm font-medium">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-              POD not uploaded
-            </div>
-          )}
+        <Section title="POD Documents">
+          <PodGallery podPath={trip.pod_path} />
         </Section>
       </div>
+    </div>
+  );
+}
+
+function PodGallery({ podPath }) {
+  const [selectedImage, setSelectedImage] = useState(null);
+  let pods = [];
+
+  if (podPath) {
+    try {
+      pods = JSON.parse(podPath);
+      if (!Array.isArray(pods)) pods = [podPath];
+    } catch (e) {
+      pods = [podPath];
+    }
+  }
+
+  const getThumbnail = (url) => {
+    if (url.toLowerCase().endsWith(".pdf")) {
+      return "https://cdn-icons-png.flaticon.com/512/337/337946.png";
+    }
+    // Cloudinary transformation
+    return url.replace("/upload/", "/upload/w_300,q_auto,f_auto/");
+  };
+
+  if (pods.length === 0) {
+    return (
+      <div className="flex items-center gap-2 text-rose-400 text-sm font-medium">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        No PODs uploaded
+      </div>
+    );
+  }
+
+  return (
+    <div className="md:col-span-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {pods.map((url, index) => {
+          const isPdf = url.toLowerCase().endsWith(".pdf");
+          return (
+            <div
+              key={index}
+              className="group relative aspect-square bg-white/5 border border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-blue-500/50 transition-all"
+              onClick={() => isPdf ? window.open(url, "_blank") : setSelectedImage(url)}
+            >
+              <img
+                src={getThumbnail(url)}
+                alt={`POD ${index + 1}`}
+                className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${isPdf ? "p-4 object-contain" : ""}`}
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white bg-blue-600 px-2 py-1 rounded">
+                  {isPdf ? "Open PDF" : "View"}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-5xl w-full h-full flex items-center justify-center">
+            <img
+              src={selectedImage}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              alt="Full view"
+            />
+            <button
+              className="absolute top-0 right-0 m-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all underline text-xs font-bold uppercase tracking-widest"
+              onClick={() => setSelectedImage(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
